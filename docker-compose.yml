@@ -1,0 +1,36 @@
+version: '3'
+services:
+  node-app:
+    image: jwt-scalable-auth:0.0.1
+    build: .
+    ports:
+      - 3000
+    environment:
+      MONGO_URL: mongodb://mongo:27017/mongoDB
+    labels:
+      - "traefik.frontend.rule=Host:localhost"
+    depends_on:
+      - mongo
+    links:
+      - mongo  
+  mongo:
+    image: mongo:4.0.4
+    ports:
+      - '27017:27017'
+
+  reverse-proxy:
+    image: traefik
+    command: --api --docker
+    ports:
+     - 80:80
+     - 8080:8080
+    volumes:
+     - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - BALANCE=leastconn
+    depends_on:
+      - node-app
+//todo node-app inside docker-compose.yml
+   web-app:
+     image: alpine
+     command: npm start
